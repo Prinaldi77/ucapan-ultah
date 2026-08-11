@@ -441,32 +441,65 @@
     // Inisialisasi Lucide Icons
     lucide.createIcons();
 
-    // Logika Pemutar Audio Backsound Melayang
+    // Logika Pemutar Audio Backsound Melayang & Smart Autoplay
     const audio = document.getElementById('bgAudio');
     const audioBtn = document.getElementById('audioBtn');
     const iconPlay = document.getElementById('iconPlay');
     const iconPause = document.getElementById('iconPause');
     let isPlaying = false;
 
-    audioBtn.addEventListener('click', () => {
+    function playAudio() {
+      if (isPlaying) return;
+      audio.play().then(() => {
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+        iconPause.classList.add('flex');
+        audioBtn.classList.add('audio-btn-active');
+        isPlaying = true;
+        removeAutoplayListeners();
+      }).catch((err) => {
+        console.log('Autoplay ditahan browser hingga sentuhan pertama pengguna:', err);
+      });
+    }
+
+    function pauseAudio() {
+      audio.pause();
+      iconPlay.classList.remove('hidden');
+      iconPause.classList.add('hidden');
+      iconPause.classList.remove('flex');
+      audioBtn.classList.remove('audio-btn-active');
+      isPlaying = false;
+    }
+
+    function handleFirstUserTouch() {
       if (!isPlaying) {
-        audio.play().then(() => {
-          iconPlay.classList.add('hidden');
-          iconPause.classList.remove('hidden');
-          iconPause.classList.add('flex');
-          audioBtn.classList.add('audio-btn-active');
-          isPlaying = true;
-        }).catch((err) => {
-          console.log('Audio playback error / file belum dipasang:', err);
-          alert('Pastikan file lagu MP3 sudah terpasang pada atribut src pada tag <audio>.');
-        });
+        playAudio();
+      }
+    }
+
+    function removeAutoplayListeners() {
+      document.removeEventListener('click', handleFirstUserTouch);
+      document.removeEventListener('touchstart', handleFirstUserTouch);
+      document.removeEventListener('scroll', handleFirstUserTouch);
+    }
+
+    // Coba putar otomatis saat halaman selesai dimuat
+    window.addEventListener('DOMContentLoaded', () => {
+      playAudio();
+    });
+
+    // Jalankan pemutaran pada sentuhan, klik, atau scroll pertama di mana saja di layar
+    document.addEventListener('click', handleFirstUserTouch, { once: true });
+    document.addEventListener('touchstart', handleFirstUserTouch, { once: true });
+    document.addEventListener('scroll', handleFirstUserTouch, { once: true });
+
+    // Tombol Manual Play / Pause
+    audioBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Cegah bentrokan listener dokumen
+      if (!isPlaying) {
+        playAudio();
       } else {
-        audio.pause();
-        iconPlay.classList.remove('hidden');
-        iconPause.classList.add('hidden');
-        iconPause.classList.remove('flex');
-        audioBtn.classList.remove('audio-btn-active');
-        isPlaying = false;
+        pauseAudio();
       }
     });
   </script>
